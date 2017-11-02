@@ -1,0 +1,1 @@
+* * * * * .nvm/versions/node/v6.9.5/bin/node Desktop/hrsf83-web-historian/workers/htmlfetcher.js

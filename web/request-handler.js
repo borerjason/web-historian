@@ -10,7 +10,7 @@ var query = require('query-string');
 
 exports.handleRequest = function (req, res) {
   
-  console.log(req.method);
+  console.log('first request:', req.method);
 
   var cb = (errorCode) => (err, data) => {
     if (err) {
@@ -37,15 +37,13 @@ exports.handleRequest = function (req, res) {
           res.end();
         }
         var statusCode = 200;
-        var headers = httpHelper.headers;
-        headers['Content-Type'] = 'text/css';
-        res.writeHead(statusCode, headers);
+        res.writeHead(statusCode, { 'Content-Type': 'text/css'});
         res.end(css);
       });
     }
     if (pathname === '/') {
       httpHelper.serveAssets(res, './web/public/index.html', cb(500));
-    }
+    } 
   }
   
   if (req.method === 'POST') {
@@ -63,7 +61,7 @@ exports.handleRequest = function (req, res) {
             if (!exist) {
               archive.addUrlToList(searchUrl);
             } 
-            console.log(cb);
+            archive.downloadUrls([searchUrl]);
             httpHelper.serveAssets(res, path.join(archive.paths.siteAssets, '/loading.html'), cb());
           });
         }

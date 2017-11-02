@@ -7,33 +7,12 @@ var query = require('query-string');
 
 // require more modules/folders here!
 
+
 exports.handleRequest = function (req, res) {
+  
+  console.log(req.method);
 
-  var request = {
-    GET: function() {
-
-    },
-    POST: function() {
-      var data = '';
-      req.on('data', (chunk) => {
-        data += chunk;
-      }).on('end', () => {
-        seachUrl = data.slice(4); 
-        console.log(seachUrl);
-        // open sites.txt file containing urls
-        // archive.isUrlInList(searchUrl, (bool) => {
-        //   if (bool) {
-        //     archive.isUrlArchived()
-        //   }
-        // });
-      });
-      
-    }
-  };
-
-
-
-  var cb = (errorCode) => (err, html) => {
+  var cb = (errorCode) => (err, data) => {
     if (err) {
       res.writeHead(500);
       res.end('Server Error!');
@@ -41,35 +20,55 @@ exports.handleRequest = function (req, res) {
     var statusCode = 200;
     var headers = httpHelper.headers;
     res.writeHead(statusCode, headers);
-    res.end(html);
+    res.end(data);
   };
-
+  
   var urlParts = url.parse(req.url);
   var pathname = urlParts.pathname;
-  var statusCode = 200;
-  if (pathname === '/') {
-    httpHelper.serveAssets(res, './web/public/index.html', cb(500));
-  } else if (pathname === '/styles.css') {
-    httpHelper.serveAssets(res, './web/public/styles.css', (err, css) => {
-      if (err) {
-        res.writeHead(500);
-        res.end();
-      }
-      var statusCode = 200;
-      var headers = httpHelper.headers;
-      headers['Content-Type'] = 'text/css';
-      res.writeHead(statusCode, headers);
-      res.end(css);
+  console.log('pathname: ', pathname);
+  // var statusCode = 200;
+  
+  
+  if (req.method === 'GET') {
+    if (pathname === '/styles.css') {
+      httpHelper.serveAssets(res, './web/public/styles.css', (err, css) => {
+        if (err) {
+          res.writeHead(500);
+          res.end();
+        }
+        var statusCode = 200;
+        var headers = httpHelper.headers;
+        headers['Content-Type'] = 'text/css';
+        res.writeHead(statusCode, headers);
+        res.end(css);
+      });
+    }
+    if (pathname === '/') {
+      httpHelper.serveAssets(res, './web/public/index.html', cb(500));
+    }
+  }
+  
+  if (req.method === 'POST') {
+    var data = '';
+    req.on('data', (chunk) => {
+      data += chunk;
+    }).on('end', () => {
+      console.log(data);
+      searchUrl = data.slice(4); 
+      archive.isUrlArchived(searchUrl, (bool) => {
+        if (bool) {
+          httpHelper.serveAssets(res, path.join(archive.paths.archivedSites, '/', searchUrl), cb());
+        } else {
+          archive.isUrlInList(searchUrl, (exist) => {
+            if (!exist) {
+              archive.addUrlToList(searchUrl);
+            } 
+            console.log(cb);
+            httpHelper.serveAssets(res, path.join(archive.paths.siteAssets, '/loading.html'), cb());
+          });
+        }
+      });
     });
-  }
-
-  if (request[req.method]) {
-    request[req.method]();
-  }
-
-
-
-
-  //res.end(archive.paths.list);
+  }  
 };
 
